@@ -1,0 +1,5 @@
+﻿  main.cpp
+C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Master\Prime-Checker-DS\main.cpp(17,33): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Master\Prime-Checker-DS\main.cpp(57,28): warning C4244: '=': conversion from 'SOCKET' to 'int', possible loss of data
+C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Master\Prime-Checker-DS\main.cpp(88,22): warning C4244: 'initializing': conversion from 'SOCKET' to 'int', possible loss of data
+  Prime-Checker-DS.vcxproj -> C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Master\x64\Debug\Prime-Checker-DS.exe
