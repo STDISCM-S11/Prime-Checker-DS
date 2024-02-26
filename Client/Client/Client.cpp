@@ -54,18 +54,17 @@ int main() {
     
     
     // get input then send input to master
-    std::cout << "message:" << std::endl;
+    std::cout << "message: ";
     std::cin >> msg;
     send(sock, msg, strlen(msg), 0);
-    // Fix Printing of message
-    int bytesReceived = recv(sock, buffer, sizeof(buffer) - 1, 0);
-    if(bytesReceived > 0) {
-        buffer[bytesReceived] = '\0'; // Ensure null-termination
-        std::cout << "Server: " << buffer << std::endl; // Print the received message
+    while (true) {
+        int bytesReceived = recv(sock, buffer, sizeof(buffer), 0);
+        if (bytesReceived > 0) {
+            buffer[bytesReceived] = '\0'; // Null-terminate buffer
+            std::cout << "Response from master: " << buffer << std::endl;
+            break; // Exit if you only expect one response
+        }
     }
-    //while (true) {
-    //    
-    //}
 
     // Close the socket
     closesocket(sock);

@@ -12,6 +12,7 @@
 #pragma comment (lib, "Ws2_32.lib")
 
 std::vector<int> slave_sockets; // List of slave sockets
+int client_socket;
 std::mutex slave_sockets_mutex; // Mutex for protecting the slave sockets list
 std::unordered_map<int, int> client_requests; // Maps a request ID to a client socket
 
@@ -26,15 +27,7 @@ void handle_slave(int slave_socket) {
         }
         buffer[bytesReceived] = '\0';
 
-        // Process the message and determine which client it is for
-        // Assuming the message format is "request_id:message"
-        std::lock_guard<std::mutex> lock(slave_sockets_mutex);
-        if (!slave_sockets.empty()) {
-            // Send the response back to the client
-            send(slave_sockets[0], buffer, bytesReceived, 0);
-        }
-        // Echo the message back to the master for now
-        //send(slave_socket, buffer, bytesReceived, 0);
+        send(client_socket, buffer, bytesReceived, 0); // client_socket needs to be tracked when the client connects
     }
 }
 
@@ -46,9 +39,6 @@ void handle_client(int client_socket) {
             // Handle errors or closure
             break;
         }
-        // Assign a unique request ID for each client request
-        static int request_id = 0; // This should be made thread-safe in a real-world scenario
-        std::string request = std::to_string(request_id++) + ":" + std::string(buffer, bytesReceived);
 
         // Forward the request to a slave
         std::lock_guard<std::mutex> lock(slave_sockets_mutex);
@@ -62,29 +52,6 @@ void handle_client(int client_socket) {
             const char* errMsg = "No slaves available.";
             send(client_socket, errMsg, strlen(errMsg), 0);
         }
-        // Forward the message to the first slave
-        //{
-        //    std::lock_guard<std::mutex> lock(slave_sockets_mutex);
-        //    if (!slave_sockets.empty()) {
-        //        send(slave_sockets[0], buffer, bytesReceived, 0);
-        //        // Wait for the response from the slave
-        //        int bytesFromSlave = recv(slave_sockets[0], buffer, sizeof(buffer), 0);
-        //        if (bytesFromSlave > 0) {
-        //            // Send the response from the slave back to the client
-        //            send(client_socket, buffer, bytesFromSlave, 0);
-        //        }
-        //        else {
-        //            // Handle errors or closure
-        //            break;
-        //        }
-        //    }
-        //    else {
-        //        std::cerr << "No slaves connected.\n";
-        //        // Send an error message back to the client or handle accordingly
-        //        const char* errMsg = "No slaves available.";
-        //        send(client_socket, errMsg, strlen(errMsg), 0);
-        //    }
-        //}
     }
     closesocket(client_socket); // Close the client socket when done
 }
@@ -155,6 +122,7 @@ int main()
             if (identity == "CLIENT") {
                 std::cout << "Client connected" << std::endl;
                 std::thread clientThread(handle_client, new_conn);
+                client_socket = new_conn;
                 clientThread.detach();
             }
             else if (identity == "SLAVE") {
@@ -174,7 +142,6 @@ int main()
         }
     }
 
-    
     int bytesReceived = recv(new_socket, buffer, 1024, 0);
     if (bytesReceived == SOCKET_ERROR) {
         printf("recv failed with error: %d\n", WSAGetLastError());
