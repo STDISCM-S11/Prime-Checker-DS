@@ -22,7 +22,7 @@ int main() {
         return 1;
     }
 
-    if (inet_pton(AF_INET, "127.0.0.1", &server.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, "192.168.100.93", &server.sin_addr) <= 0) {
         std::cerr << "Invalid address/ Address not supported \n";
         closesocket(sock);
         WSACleanup();

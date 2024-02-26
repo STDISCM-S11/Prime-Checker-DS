@@ -85,38 +85,74 @@ int main()
         WSACleanup();
         return 1;
     }
+    //while (true) {
+    //    int new_conn = accept(server_fd, (struct sockaddr*)&address, &addrlen);
+
+    //    if (new_conn < 0 /*== INVALID_SOCKET*/) {
+    //        printf("accept failed with error: %d\n", WSAGetLastError());
+    //        continue;
+    //        /*closesocket(server_fd);
+    //        WSACleanup();
+    //        return 1;*/
+    //    }
+
+    //    char buffer[1024] = {0};
+
+    //    recv(new_conn, buffer, sizeof(buffer), 0);
+
+    //    std::string identity = buffer;
+
+    //    if (identity == "CLIENT")
+    //    {
+    //        std::cout << "Client connected" << std::endl;
+    //        std::thread clientThread(handle_client, new_conn);
+    //        clientThread.detach();
+    //    }
+    //    else if (identity == "SLAVE")
+    //    {
+    //        std::cout << "Slave connected" << std::endl;
+    //        std::thread slaveThread(handle_slave, new_conn);
+    //        slaveThread.detach();
+    //        // slaves.push_back(new_conn);
+    //    }
+
+    //}
     while (true) {
         int new_conn = accept(server_fd, (struct sockaddr*)&address, &addrlen);
 
-        if (new_conn < 0 /*== INVALID_SOCKET*/) {
+        if (new_conn == INVALID_SOCKET) {
             printf("accept failed with error: %d\n", WSAGetLastError());
             continue;
-            /*closesocket(server_fd);
-            WSACleanup();
-            return 1;*/
         }
 
-        char buffer[1024] = {0};
+        char buffer[1024] = { 0 };
+        int result = recv(new_conn, buffer, sizeof(buffer) - 1, 0);
 
-        recv(new_conn, buffer, sizeof(buffer), 0);
+        if (result > 0) {
+            buffer[result] = '\0'; // Null-terminate the received data
+            std::string identity = buffer;
 
-        std::string identity = buffer;
-
-        if (identity == "CLIENT")
-        {
-            std::cout << "Client connected" << std::endl;
-            std::thread clientThread(handle_client, new_conn);
-            clientThread.detach();
+            if (identity == "CLIENT") {
+                std::cout << "Client connected" << std::endl;
+                std::thread clientThread(handle_client, new_conn);
+                clientThread.detach();
+            }
+            else if (identity == "SLAVE") {
+                std::cout << "Slave connected" << std::endl;
+                std::thread slaveThread(handle_slave, new_conn);
+                slaveThread.detach();
+            }
         }
-        else if (identity == "SLAVE")
-        {
-            std::cout << "Slave connected" << std::endl;
-            std::thread slaveThread(handle_slave, new_conn);
-            slaveThread.detach();
-            // slaves.push_back(new_conn);
+        else if (result == 0) {
+            printf("Connection closing...\n");
+            closesocket(new_conn);
         }
-
+        else {
+            printf("recv failed with error: %d\n", WSAGetLastError());
+            closesocket(new_conn);
+        }
     }
+
     
     int bytesReceived = recv(new_socket, buffer, 1024, 0);
     if (bytesReceived == SOCKET_ERROR) {
