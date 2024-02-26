@@ -10,24 +10,27 @@ int main() {
     struct sockaddr_in server;
 
     // Initialize Winsock
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
-        std::cerr << "WSAStartup failed.\n";
+    int result = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (result != 0) {
+        std::cerr << "WSAStartup failed: " << result << std::endl;
         return 1;
     }
 
     // Create the socket
-    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
+    sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock == INVALID_SOCKET) {
         std::cerr << "Socket creation failed with error: " << WSAGetLastError() << std::endl;
         WSACleanup();
         return 1;
     }
 
-    if (inet_pton(AF_INET, "192.168.100.93", &server.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, "127.0.0.1", &server.sin_addr) <= 0) {
         std::cerr << "Invalid address/ Address not supported \n";
         closesocket(sock);
         WSACleanup();
         return 1;
     }
+
     server.sin_family = AF_INET;
     server.sin_port = htons(8080); // Server Port
 
@@ -42,12 +45,21 @@ int main() {
     std::cout << "Connected to server.\n";
 
     // Send an initial message
-    const char* clientMsg = "CLIENT";
-    send(sock, clientMsg, strlen(clientMsg), 0);
+    std::string identity = "CLIENT";
+    send(sock, identity.c_str(), identity.size(), 0);
 
-    // Here you can implement further communication logic as needed
-    // For example, sending a specific task or receiving data from the server
+    char buffer[1024] = { 0 };
+    const char* clientMsg = "send to master";
+    char msg[1024] = { 0 };
+    
+    // get input then send input to master
+    std::cout << "message:" << std::endl;
+    std::cin >> msg;
+    send(sock, msg, strlen(msg), 0);
+    recv(sock, buffer, sizeof(buffer) - 1, 0);
 
+    // Fix Printing of message
+    
     // Close the socket
     closesocket(sock);
 
