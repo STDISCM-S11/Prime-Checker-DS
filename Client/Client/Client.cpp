@@ -59,7 +59,12 @@ int main() {
     recv(sock, buffer, sizeof(buffer) - 1, 0);
 
     // Fix Printing of message
-    
+    int bytesReceived = recv(sock, buffer, sizeof(buffer) - 1, 0);
+    if(bytesReceived > 0) {
+        buffer[bytesReceived] = '\0'; // Ensure null-termination
+        std::cout << "Server: " << buffer << std::endl; // Print the received message
+    }
+
     // Close the socket
     closesocket(sock);
 
