@@ -1,6 +1,7 @@
 #include <iostream>
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#include <string>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -28,7 +29,7 @@ int main() {
     master_server_addr.sin_port = htons(8080);
     
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if (inet_pton(AF_INET, "192.168.43.53", &master_server_addr.sin_addr) <= 0) {
+    if (inet_pton(AF_INET, "127.0.0.1", &master_server_addr.sin_addr) <= 0) {
         std::cerr << "\nInvalid address/ Address not supported \n";
         closesocket(server_sock);
         WSACleanup();
@@ -47,13 +48,21 @@ int main() {
     send(server_sock, identity.c_str(), identity.size(), 0);
 
     char buffer[1024] = { 0 };
-    const char* slave_message = "send to master";
+    //const char* slave_message = "message received";
     while (true) {
         result = recv(server_sock, buffer, sizeof(buffer), 0);
         if (result > 0) {
+            buffer[result] = '\0'; // Null-terminate the received message
             std::cout << "Message from master: " << buffer << std::endl;
-            // Respond to the master server
-            send(server_sock, slave_message, strlen(slave_message), 0);
+
+            //TODO: THIS IS WHERE THE PRIME CHECKING HAPPENS CHUCHUCHU//
+
+            // Construct the response message
+            std::string response_message = " Primes Checked";
+            //response_message += buffer; // Append the received message to the response message
+
+            // Send the response back to the master server
+            send(server_sock, response_message.c_str(), response_message.length(), 0);
         }
         else if (result == 0) {
             std::cout << "Connection closed\n";

@@ -1,6 +1,3 @@
-// Prime-Checker-DS.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
-
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <stdio.h>
@@ -8,34 +5,88 @@
 #include <stdlib.h>
 #include <vector>
 #include <thread>
+#include <mutex>
+#include <unordered_map>
+#include <string>
 
 #pragma comment (lib, "Ws2_32.lib")
 
-void handle_slave(int socket)
-{
-    char buffer[1024] = { 0 };
-    const char* message = "hello";
-    send(socket, message, strlen(message), 0);
-    std::cout << "Message sent to slave server\n";
-    recv(socket, buffer, 1024, 0); // Example of reading a message from slave
-    std::cout << "Message from slave: " << buffer << std::endl;
-}
+std::vector<int> slave_sockets; // List of slave sockets
+std::mutex slave_sockets_mutex; // Mutex for protecting the slave sockets list
+std::unordered_map<int, int> client_requests; // Maps a request ID to a client socket
 
-void handle_client(int socket)
-{
+void handle_slave(int slave_socket) {
     char buffer[1024] = { 0 };
-    while (true)
-    {
-        int val = recv(socket, buffer, sizeof(buffer), 0);
-        if (val <= 0)
-        {
-            std::cerr << "Error" << std::endl;
-            closesocket(socket);
+    // Assume the slave is always ready to process messages after connecting
+    while (true) {
+        int bytesReceived = recv(slave_socket, buffer, sizeof(buffer) - 1, 0);
+        if (bytesReceived <= 0) {
+            // Handle errors or closure
             break;
         }
+        buffer[bytesReceived] = '\0';
 
-        std::cout << buffer << std::endl;
+        // Process the message and determine which client it is for
+        // Assuming the message format is "request_id:message"
+        std::lock_guard<std::mutex> lock(slave_sockets_mutex);
+        if (!slave_sockets.empty()) {
+            // Send the response back to the client
+            send(slave_sockets[0], buffer, bytesReceived, 0);
+        }
+        // Echo the message back to the master for now
+        //send(slave_socket, buffer, bytesReceived, 0);
     }
+}
+
+void handle_client(int client_socket) {
+    char buffer[1024] = { 0 };
+    while (true) {
+        int bytesReceived = recv(client_socket, buffer, sizeof(buffer), 0);
+        if (bytesReceived <= 0) {
+            // Handle errors or closure
+            break;
+        }
+        // Assign a unique request ID for each client request
+        static int request_id = 0; // This should be made thread-safe in a real-world scenario
+        std::string request = std::to_string(request_id++) + ":" + std::string(buffer, bytesReceived);
+
+        // Forward the request to a slave
+        std::lock_guard<std::mutex> lock(slave_sockets_mutex);
+        if (!slave_sockets.empty()) {
+            send(slave_sockets[0], buffer, bytesReceived, 0);
+            // Do not wait for the response here, handle_slave will handle it
+        }
+        else {
+            std::cerr << "No slaves connected.\n";
+            // Send an error message back to the client or handle accordingly
+            const char* errMsg = "No slaves available.";
+            send(client_socket, errMsg, strlen(errMsg), 0);
+        }
+        // Forward the message to the first slave
+        //{
+        //    std::lock_guard<std::mutex> lock(slave_sockets_mutex);
+        //    if (!slave_sockets.empty()) {
+        //        send(slave_sockets[0], buffer, bytesReceived, 0);
+        //        // Wait for the response from the slave
+        //        int bytesFromSlave = recv(slave_sockets[0], buffer, sizeof(buffer), 0);
+        //        if (bytesFromSlave > 0) {
+        //            // Send the response from the slave back to the client
+        //            send(client_socket, buffer, bytesFromSlave, 0);
+        //        }
+        //        else {
+        //            // Handle errors or closure
+        //            break;
+        //        }
+        //    }
+        //    else {
+        //        std::cerr << "No slaves connected.\n";
+        //        // Send an error message back to the client or handle accordingly
+        //        const char* errMsg = "No slaves available.";
+        //        send(client_socket, errMsg, strlen(errMsg), 0);
+        //    }
+        //}
+    }
+    closesocket(client_socket); // Close the client socket when done
 }
 
 int main()
@@ -85,38 +136,7 @@ int main()
         WSACleanup();
         return 1;
     }
-    //while (true) {
-    //    int new_conn = accept(server_fd, (struct sockaddr*)&address, &addrlen);
-
-    //    if (new_conn < 0 /*== INVALID_SOCKET*/) {
-    //        printf("accept failed with error: %d\n", WSAGetLastError());
-    //        continue;
-    //        /*closesocket(server_fd);
-    //        WSACleanup();
-    //        return 1;*/
-    //    }
-
-    //    char buffer[1024] = {0};
-
-    //    recv(new_conn, buffer, sizeof(buffer), 0);
-
-    //    std::string identity = buffer;
-
-    //    if (identity == "CLIENT")
-    //    {
-    //        std::cout << "Client connected" << std::endl;
-    //        std::thread clientThread(handle_client, new_conn);
-    //        clientThread.detach();
-    //    }
-    //    else if (identity == "SLAVE")
-    //    {
-    //        std::cout << "Slave connected" << std::endl;
-    //        std::thread slaveThread(handle_slave, new_conn);
-    //        slaveThread.detach();
-    //        // slaves.push_back(new_conn);
-    //    }
-
-    //}
+    
     while (true) {
         int new_conn = accept(server_fd, (struct sockaddr*)&address, &addrlen);
 
@@ -140,6 +160,7 @@ int main()
             else if (identity == "SLAVE") {
                 std::cout << "Slave connected" << std::endl;
                 std::thread slaveThread(handle_slave, new_conn);
+				slave_sockets.push_back(new_conn);
                 slaveThread.detach();
             }
         }

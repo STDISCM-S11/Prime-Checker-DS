@@ -52,18 +52,20 @@ int main() {
     const char* clientMsg = "send to master";
     char msg[1024] = { 0 };
     
+    
     // get input then send input to master
     std::cout << "message:" << std::endl;
     std::cin >> msg;
     send(sock, msg, strlen(msg), 0);
-    recv(sock, buffer, sizeof(buffer) - 1, 0);
-
     // Fix Printing of message
     int bytesReceived = recv(sock, buffer, sizeof(buffer) - 1, 0);
     if(bytesReceived > 0) {
         buffer[bytesReceived] = '\0'; // Ensure null-termination
         std::cout << "Server: " << buffer << std::endl; // Print the received message
     }
+    //while (true) {
+    //    
+    //}
 
     // Close the socket
     closesocket(sock);

@@ -1,0 +1,4 @@
+﻿  Slave.cpp
+C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Slave\Slave.cpp(48,54): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Slave\Slave.cpp(65,80): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  Slave.vcxproj -> C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Slave\x64\Debug\Slave.exe
