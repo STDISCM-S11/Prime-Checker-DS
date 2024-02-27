@@ -28,6 +28,28 @@ void primesCheck(int start, int end, std::atomic<int>& primesCount) {
             ++primesCount;
         }
     }
+}
+
+void primeCheckerMain(int reqStart, int reqEnd, std::atomic<int>& primesCount) {
+    int totalRange = reqEnd - reqStart + 1;
+    int threadCount = min(1, totalRange); // Adjust thread count based on range
+
+    //std::vector<std::future<int>> futures;
+    std::vector<std::thread> threads;
+    std::mutex mutex;
+
+    int baseRange = totalRange / threadCount;
+    int remain = totalRange % threadCount;
+
+    for (int i = 0; i < threadCount; i++) {
+        int start = reqStart + i * baseRange;
+        int end = (i < threadCount - 1) ? start + baseRange - 1 : reqEnd;
+
+        threads.push_back(std::thread(primesCheck, start, end, std::ref(primesCount)));
+    }
+    for (auto& thread : threads) {
+        thread.join();
+    }
 
     std::cout << primesCount << " primes." << std::endl;
 }
@@ -61,7 +83,7 @@ void handle_client(int client_socket, std::atomic<int>& primesCount) {
     int mid = start + (end - start) / 2;
 
     // Start thread for master range
-    std::thread masterThread(primesCheck, start, mid, std::ref(primesCount));
+    std::thread masterThread(primeCheckerMain, start, mid, std::ref(primesCount));
 
     // Prepare message for slave
     std::string message = std::to_string(mid + 1) + "," + std::to_string(end);
