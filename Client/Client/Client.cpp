@@ -80,9 +80,10 @@ int main() {
     // End timing
     auto end = std::chrono::high_resolution_clock::now();
 
-    // Calculate and print the response time
+    // Calculate and print the response time in seconds
     auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-    std::cout << "Response time: " << duration.count() << " milliseconds.\n";
+    double duration_seconds = duration.count() / 1000.0;
+    std::cout << "Response time: " << duration_seconds << " seconds.\n";
 
     // Close the socket
     closesocket(sock);
