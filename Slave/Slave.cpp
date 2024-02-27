@@ -35,7 +35,7 @@ void primesCheck(int start, int end, std::vector<int>& primes,
 
 int primeCheckerMain(int reqStart, int reqEnd) {
     int totalRange = reqEnd - reqStart + 1;
-    int threadCount = min(32, totalRange); // Adjust thread count based on range
+    int threadCount = min(1, totalRange); // Adjust thread count based on range
 
     std::vector<int> primes;
     std::vector<std::thread> threads;
