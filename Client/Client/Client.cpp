@@ -50,12 +50,10 @@ int main() {
     std::string identity = "CLIENT";
     send(sock, identity.c_str(), identity.size(), 0);
 
-    char buffer[1024] = { 0 };
-    const char* clientMsg = "send to master";
-    char startMsg[1024] = { 0 };
-    char endMsg[1024] = { 0 };
+    char buffer[1024] = {0};
+    char startMsg[1024] = {0};
+    char endMsg[1024] = {0};
     std::string msg;
-    
     
     // get input then send input to master
     std::cout << "start point: ";
@@ -65,16 +63,26 @@ int main() {
     std::cout << "end point: ";
     std::cin >> endMsg;
     msg += endMsg;
+
+    // Start timing
+    auto start = std::chrono::high_resolution_clock::now();
+
+    // Send the message to the server
     send(sock, msg.c_str(), msg.size(), 0);
 
-    while (true) {
-        int bytesReceived = recv(sock, buffer, sizeof(buffer), 0);
-        if (bytesReceived > 0) {
-            buffer[bytesReceived] = '\0'; // Null-terminate buffer
-            std::cout << "Response from master: " << buffer << std::endl;
-            break; // Exit if you only expect one response
-        }
+    // Wait for response from server
+    int bytesReceived = recv(sock, buffer, sizeof(buffer), 0);
+    if (bytesReceived > 0) {
+        buffer[bytesReceived] = '\0'; // Null-terminate buffer
+        std::cout << "Response from master: " << buffer << std::endl;
     }
+
+    // End timing
+    auto end = std::chrono::high_resolution_clock::now();
+
+    // Calculate and print the response time
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    std::cout << "Response time: " << duration.count() << " milliseconds.\n";
 
     // Close the socket
     closesocket(sock);
