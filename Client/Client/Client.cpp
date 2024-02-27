@@ -1,6 +1,8 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 #include <iostream>
+#include <string>
+#include <chrono>
 
 #pragma comment(lib, "Ws2_32.lib")
 
@@ -50,13 +52,21 @@ int main() {
 
     char buffer[1024] = { 0 };
     const char* clientMsg = "send to master";
-    char msg[1024] = { 0 };
+    char startMsg[1024] = { 0 };
+    char endMsg[1024] = { 0 };
+    std::string msg;
     
     
     // get input then send input to master
-    std::cout << "message: ";
-    std::cin >> msg;
-    send(sock, msg, strlen(msg), 0);
+    std::cout << "start point: ";
+    std::cin >> startMsg;
+    msg += startMsg;
+    msg += ",";
+    std::cout << "end point: ";
+    std::cin >> endMsg;
+    msg += endMsg;
+    send(sock, msg.c_str(), msg.size(), 0);
+
     while (true) {
         int bytesReceived = recv(sock, buffer, sizeof(buffer), 0);
         if (bytesReceived > 0) {

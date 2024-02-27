@@ -1,4 +1,4 @@
 ﻿  Client.cpp
-C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Client\Client\Client.cpp(49,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Client\Client\Client.cpp(59,27): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Client\Client\Client.cpp(51,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Client\Client\Client.cpp(68,37): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
   Client.vcxproj -> C:\Users\Ayisha\Documents\GitHub\Prime-Checker-DS\Client\x64\Debug\Client.exe
